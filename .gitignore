@@ -1,0 +1,30 @@
+# Dependencies
+node_modules/
+package-lock.json
+
+# Build artifacts
+release/build/
+*.zip
+
+# Local Chrome profile (persistent user data, never commit)
+linguasub-profile/
+
+# Logs
+*.log
+npm-debug.log*
+
+# OS / editor
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# Temp test files
+/tmp/
+_*.mjs
+_*.js
+
+# Node test cache
+.cache/

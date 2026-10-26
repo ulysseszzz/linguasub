@@ -1,0 +1,20 @@
+<!doctype html>
+<html>
+<head><meta charset="utf-8"><title>LinguaSub fixture</title></head>
+<body>
+  <h1>Local video fixture</h1>
+  <div id="player" style="position:relative;width:640px;height:360px;background:#000;">
+    <video id="video" muted playsinline style="width:100%;height:100%"></video>
+  </div>
+  <p>Content script marker: <span id="marker">pending</span></p>
+  <script>
+    // Reflects the dataset flag set by src/content/content.js on boot.
+    const t0 = Date.now();
+    const iv = setInterval(() => {
+      const v = document.documentElement.dataset.lsBoot;
+      document.getElementById('marker').textContent = v || 'not-set';
+      if (v === '1' || Date.now() - t0 > 10000) clearInterval(iv);
+    }, 100);
+  </script>
+</body>
+</html>

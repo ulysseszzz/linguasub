@@ -1,0 +1,25 @@
+<!doctype html>
+<html>
+<head><meta charset="utf-8"><title>LinguaSub engine check</title></head>
+<body>
+  <pre id="result">working…</pre>
+  <script type="module">
+    window.__lsEngineResult = { state: 'working' };
+    try {
+      const { AutoTokenizer, env } = await import('../vendor/transformers.min.mjs');
+      env.allowLocalModels = false;
+      // Tokenizer download exercises: vendored bundle execution + HuggingFace reachability.
+      const tok = await AutoTokenizer.from_pretrained('Xenova/nllb-200-distilled-600M');
+      const enc = await tok('Hello world, this is a local model connectivity check.', {
+        src_lang: 'eng_Latn', tgt_lang: 'zho_Hans'
+      });
+      const len = enc.input_ids.size ?? enc.input_ids.data.length;
+      window.__lsEngineResult = { state: 'done', tokens: len, vocab: tok.model.vocab_size || null };
+      document.getElementById('result').textContent = JSON.stringify(window.__lsEngineResult);
+    } catch (err) {
+      window.__lsEngineResult = { state: 'error', error: String(err && err.message || err) };
+      document.getElementById('result').textContent = JSON.stringify(window.__lsEngineResult);
+    }
+  </script>
+</body>
+</html>

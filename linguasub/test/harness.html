@@ -1,0 +1,148 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>LinguaSub content overlay harness</title>
+  <style>
+    body { font-family: sans-serif; margin: 20px; background: #222; color: #eee; }
+    #fs { width: 640px; height: 360px; background: #334; position: relative; }
+    video { width: 320px; height: 180px; background: #000; }
+  </style>
+</head>
+<body>
+  <h1>LinguaSub harness</h1>
+  <div id="fs"><video muted playsinline></video></div>
+  <pre id="results" data-result="running">running…</pre>
+
+  <!-- Minimal chrome mock: present but WITHOUT runtime.id so content.js does not auto-boot. -->
+  <script>
+    globalThis.chrome = {
+      runtime: { id: undefined, onMessage: { addListener() {} } },
+      storage: { sync: { get() {}, set() {} } }
+    };
+  </script>
+  <script src="../src/shared/languages.js"></script>
+  <script src="../src/shared/text-utils.js"></script>
+  <script src="../src/content/content.js"></script>
+
+  <script>
+  (function () {
+    'use strict';
+    const results = [];
+    function test(name, fn) {
+      try { fn(); results.push({ name, pass: true }); }
+      catch (err) { results.push({ name, pass: false, error: String(err && err.message || err) }); }
+    }
+    function assert(cond, msg) { if (!cond) throw new Error(msg || 'assertion failed'); }
+
+    const C = globalThis.LSContent;
+    const settings = globalThis.LSText.mergeSettings({
+      target: 'eng_Latn',
+      style: { fontSize: 30, color: '#ffe082', bg: '#101820', bgOpacity: 0.75, offset: 12 }
+    });
+
+    test('mount() appends host to body and keeps captions hidden initially', () => {
+      C.mount(settings);
+      assert(C.mounted, 'not mounted');
+      const host = document.getElementById('linguasub-host');
+      assert(host, 'host missing');
+      assert(host.shadowRoot, 'shadow root missing');
+      assert(host.parentNode === document.body, 'not under body');
+      const stage = C.els.stageEl;
+      assert(!stage.classList.contains('show'), 'should be hidden before first line');
+    });
+
+    test('renderLine() shows bilingual caption text', () => {
+      C.renderLine({ original: 'Benvenuti allo spettacolo', translation: 'Welcome to the show', iso: 'it' });
+      assert(C.els.stageEl.classList.contains('show'), 'stage not visible');
+      assert(C.els.translationEl.textContent === 'Welcome to the show', C.els.translationEl.textContent);
+      assert(C.els.originalEl.textContent === 'Benvenuti allo spettacolo', C.els.originalEl.textContent);
+      assert(C.els.originalEl.parentNode.style.display !== 'none', 'original row hidden');
+      assert(C.els.badgeEl.textContent === 'it', 'badge missing iso');
+    });
+
+    test('same-as-translation original line hides the original row', () => {
+      C.renderLine({ original: 'OK', translation: 'OK', iso: 'en' });
+      assert(C.els.originalEl.parentNode.style.display === 'none', 'row should collapse');
+    });
+
+    test('setSettings({showOriginal:false}) hides original live', () => {
+      C.setSettings(globalThis.LSText.mergeSettings({ target: 'eng_Latn', showOriginal: false, style: settings.style }));
+      C.renderLine({ original: 'Ciao mondo', translation: 'Hello world', iso: 'it' });
+      assert(C.els.originalEl.parentNode.style.display === 'none', 'original should be hidden');
+    });
+
+    test('custom style is applied via CSS custom properties', () => {
+      const css = C.els.stageEl.style.cssText;
+      assert(/--ls-font-size:\s*30px/.test(css), css);
+      assert(/--ls-color:\s*#ffe082/.test(css), css);
+      assert(/--ls-offset:\s*12px/.test(css), css);
+      assert(C.els.stageEl.getAttribute('data-outline') === '1', 'outline attr');
+    });
+
+    test('clear hides the overlay', () => {
+      C.renderLine({ clear: true });
+      assert(!C.els.stageEl.classList.contains('show'), 'still visible after clear');
+    });
+
+    test('fullscreen: host reparents inside the fullscreen element', () => {
+      const fs = document.getElementById('fs');
+      Object.defineProperty(document, 'fullscreenElement', { value: fs, configurable: true });
+      document.dispatchEvent(new Event('fullscreenchange', { bubbles: true }));
+      assert(C.host.parentNode === fs, `expected host inside #fs, got ${C.host.parentNode && C.host.parentNode.id}`);
+      assert(C.isFullscreen === true, 'fullscreen flag');
+
+      Object.defineProperty(document, 'fullscreenElement', { value: null, configurable: true });
+      document.dispatchEvent(new Event('fullscreenchange', { bubbles: true }));
+      assert(C.host.parentNode === document.body, 'host should return to body');
+    });
+
+    test('raw-video fullscreen falls back to video parent and uses native cues', () => {
+      const video = document.querySelector('video');
+      Object.defineProperty(document, 'fullscreenElement', { value: video, configurable: true });
+      document.dispatchEvent(new Event('fullscreenchange', { bubbles: true }));
+      assert(C.cueVideo === video, 'cue video not bound');
+      assert(C.cueTrack && C.cueTrack.mode === 'showing', 'cue track not showing');
+
+      // Bilingual mode: original + translation stacked in the cue.
+      C.setSettings(globalThis.LSText.mergeSettings({ target: 'eng_Latn', showOriginal: true, style: settings.style }));
+      C.renderLine({ original: 'Ciao', translation: '你好', iso: 'it' });
+      let cues = C.cueTrack.cues;
+      assert(cues && cues.length === 1, `expected 1 cue, got ${cues && cues.length}`);
+      assert(cues[0].text.indexOf('你好') !== -1, cues[0].text);
+      assert(cues[0].text.indexOf('Ciao') !== -1, 'bilingual cue should keep original');
+
+      // showOriginal=false: cue carries only the translation.
+      C.setSettings(globalThis.LSText.mergeSettings({ target: 'eng_Latn', showOriginal: false, style: settings.style }));
+      C.renderLine({ original: 'Ciao', translation: '你好', iso: 'it' });
+      cues = C.cueTrack.cues;
+      assert(cues[0].text === '你好', `single-line cue should be translation only: ${cues[0].text}`);
+
+      assert(document.querySelector('style[data-ls=cue-style]'), '::cue stylesheet missing');
+
+      Object.defineProperty(document, 'fullscreenElement', { value: null, configurable: true });
+      document.dispatchEvent(new Event('fullscreenchange', { bubbles: true }));
+      assert(C.cueTrack === null, 'cue track should be torn down on exit');
+    });
+
+    test('drag handle adjusts and clamps the edge offset', () => {
+      C.setSettings(globalThis.LSText.mergeSettings({ target: 'eng_Latn', style: { offset: 12 } }));
+      const handle = C.els.handleEl;
+      const before = 12;
+      handle.dispatchEvent(new PointerEvent('pointerdown', { bubbles: true, clientY: 500, pointerId: 1 }));
+      handle.dispatchEvent(new PointerEvent('pointermove', { bubbles: true, clientY: 440, pointerId: 1 }));
+      handle.dispatchEvent(new PointerEvent('pointerup', { bubbles: true, clientY: 440, pointerId: 1 }));
+      // 60px upward in bottom mode -> +30 => 12 + 30 = 42
+      assert(before === 12, 'fixture drift');
+      assert(/--ls-offset:\s*42px/.test(C.els.stageEl.style.cssText), C.els.stageEl.style.cssText);
+    });
+
+    const allPass = results.every((r) => r.pass);
+    const out = document.getElementById('results');
+    out.dataset.result = allPass ? 'pass' : 'fail';
+    out.textContent = JSON.stringify({ allPass, results }, null, 2);
+    document.title = allPass ? 'HARNESS_PASS' : 'HARNESS_FAIL';
+  })();
+  </script>
+</body>
+</html>

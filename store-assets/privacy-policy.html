@@ -1,0 +1,78 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>LinguaSub — Privacy Policy</title>
+<style>
+  body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+         max-width: 720px; margin: 40px auto; padding: 0 24px; line-height: 1.7; color: #1f2937; }
+  h1 { color: #0f172a; border-bottom: 1px solid #e5e7eb; padding-bottom: 12px; }
+  h2 { color: #1e3a8a; margin-top: 32px; }
+  .updated { color: #6b7280; font-size: 14px; }
+</style>
+</head>
+<body>
+
+<h1>Privacy Policy — LinguaSub</h1>
+<p class="updated">Last updated: October 26, 2026</p>
+
+<p>LinguaSub ("we", "our", or "the extension") is a Chrome extension that provides
+real-time, on-device translated subtitles for web videos. This policy explains
+what data we access and how it is handled.</p>
+
+<h2>1. Data We Access</h2>
+<p>LinguaSub captures the <strong>audio stream</strong> of the active browser tab
+only when the user explicitly clicks "Start on this tab". This audio is used
+solely for on-device speech recognition and translation.</p>
+
+<h2>2. On-Device Processing</h2>
+<p>All processing — speech recognition (Whisper) and machine translation
+(NLLB) — runs <strong>entirely on the user's device</strong> inside the browser,
+using WebAssembly and WebGPU accelerated AI models.</p>
+
+<h2>3. No Data Collection</h2>
+<p>We do <strong>not</strong> collect, store, transmit, or share any of the
+following:</p>
+<ul>
+  <li>Audio captured from the tab</li>
+  <li>Recognized speech text or translation output</li>
+  <li>Browsing history, page content, or personal information</li>
+</ul>
+
+<h2>4. Local Storage</h2>
+<p>Subtitle style preferences (font, color, position, etc.) and the selected
+target language are stored locally in the browser via
+<a href="https://developer.chrome.com/docs/extensions/reference/api/storage"><code>chrome.storage</code></a>.
+This data never leaves the user's device.</p>
+
+<h2>5. Model Download</h2>
+<p>On first launch, LinguaSub downloads AI model files (Whisper-tiny and
+NLLB-200) from <a href="https://huggingface.co">Hugging Face</a>. These files are
+cached in the browser's IndexedDB. No user data is transmitted during this
+download — only the model files are fetched.</p>
+
+<h2>6. Permissions Justification</h2>
+<table border="1" cellpadding="8" style="border-collapse:collapse;width:100%">
+  <tr><th>Permission</th><th>Purpose</th></tr>
+  <tr><td><code>tabCapture</code></td><td>Capture the active tab's audio stream for on-device speech recognition.</td></tr>
+  <tr><td><code>offscreen</code></td><td>Create an offscreen document to run the AudioContext and AI model worker (the service worker cannot use getUserMedia).</td></tr>
+  <tr><td><code>storage</code></td><td>Save subtitle style settings and target language preference locally.</td></tr>
+  <tr><td><code>activeTab</code></td><td>Obtain the active tab ID to route subtitle messages to the correct tab.</td></tr>
+  <tr><td><code>&lt;all_urls&gt;</code></td><td>Inject the subtitle overlay content script on any page that plays video.</td></tr>
+</table>
+
+<h2>7. Children's Privacy</h2>
+<p>LinguaSub is not directed to children under 13, and we do not knowingly
+collect personal information from children.</p>
+
+<h2>8. Changes to This Policy</h2>
+<p>We may update this policy from time to time. Material changes will be
+reflected in the "Last updated" date above.</p>
+
+<h2>9. Contact</h2>
+<p>For privacy questions, please open an issue on the LinguaSub project page
+or contact the developer through the Chrome Web Store listing.</p>
+
+</body>
+</html>

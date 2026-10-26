@@ -1,0 +1,142 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>LinguaSub</title>
+  <link rel="stylesheet" href="popup.css">
+</head>
+<body>
+  <header class="app-header">
+    <img class="app-logo" src="../../assets/icons/icon48.png" alt="">
+    <div class="app-titles">
+      <h1>LinguaSub</h1>
+      <p>Automatic translated subtitles · 100% on-device</p>
+    </div>
+  </header>
+
+  <nav class="tabs" role="tablist">
+    <button class="tab active" data-tab="home" role="tab">Home</button>
+    <button class="tab" data-tab="settings" role="tab">Settings</button>
+  </nav>
+
+  <!-- ============ HOME ============ -->
+  <section class="panel" id="panel-home">
+    <label class="field-label" for="video-lang">Video language</label>
+    <div class="select-like locked">
+      <span class="auto-pill">Auto-detect</span>
+      <span class="detected" id="detected-lang">detected on speech</span>
+    </div>
+
+    <label class="field-label" for="target-lang">Translate to</label>
+    <div class="select-wrap">
+      <select id="target-lang"></select>
+    </div>
+
+    <div class="toggle-row">
+      <div class="toggle-text">
+        <span>Use on-device AI models</span>
+        <small>Speech recognition + translation run locally</small>
+      </div>
+      <label class="switch locked-switch" title="LinguaSub always runs locally">
+        <input type="checkbox" id="local-only" checked disabled>
+        <span class="slider"></span>
+      </label>
+    </div>
+
+    <button class="cta" id="start-btn">Start on this tab</button>
+
+    <div class="progress-wrap" id="progress-wrap" hidden>
+      <div class="progress"><div class="progress-bar" id="progress-bar"></div></div>
+      <div class="status-line" id="status-line">Preparing…</div>
+    </div>
+
+    <p class="hint" id="hint">⬇ First start downloads the on-device models once (≈40&nbsp;MB ASR + ≈250&nbsp;MB translation). After that everything works offline.</p>
+  </section>
+
+  <!-- ============ SETTINGS ============ -->
+  <section class="panel" id="panel-settings" hidden>
+    <div class="preview-wrap">
+      <div class="preview-stage" id="preview-stage">
+        <div class="preview-original" id="preview-original">Hello, welcome to the show.</div>
+        <div class="preview-translation" id="preview-translation">你好，欢迎收看。</div>
+      </div>
+    </div>
+
+    <div class="grid2">
+      <div>
+        <label class="field-label">Font family</label>
+        <div class="select-wrap"><select id="s-fontFamily">
+          <option value="system-ui">System UI</option>
+          <option value="sans-serif">Sans-serif</option>
+          <option value="serif">Serif</option>
+          <option value="Georgia">Georgia</option>
+          <option value="Arial">Arial</option>
+          <option value="monospace">Monospace</option>
+          <option value="'PingFang SC'">PingFang SC</option>
+        </select></div>
+      </div>
+      <div>
+        <label class="field-label">Position</label>
+        <div class="select-wrap"><select id="s-position">
+          <option value="bottom">Bottom</option>
+          <option value="top">Top</option>
+        </select></div>
+      </div>
+    </div>
+
+    <label class="range-label">Font size <output id="o-fontSize">26</output> px
+      <input type="range" id="s-fontSize" min="14" max="48" step="1">
+    </label>
+
+    <div class="grid2">
+      <label class="color-label">Text color
+        <input type="color" id="s-color">
+      </label>
+      <label class="color-label">Background
+        <input type="color" id="s-bg">
+      </label>
+    </div>
+
+    <label class="range-label">Background opacity <output id="o-bgOpacity">0.60</output>
+      <input type="range" id="s-bgOpacity" min="0" max="1" step="0.05">
+    </label>
+
+    <label class="range-label">Edge offset <output id="o-offset">8</output> px
+      <input type="range" id="s-offset" min="0" max="70" step="1">
+    </label>
+
+    <label class="range-label">Max width <output id="o-maxWidth">72</output> %
+      <input type="range" id="s-maxWidth" min="30" max="100" step="1">
+    </label>
+
+    <div class="grid2">
+      <label class="color-label">Alignment
+        <div class="select-wrap"><select id="s-align">
+          <option value="center">Center</option>
+          <option value="left">Left</option>
+          <option value="right">Right</option>
+        </select></div>
+      </label>
+      <label class="color-label">Compute device
+        <div class="select-wrap"><select id="s-device">
+          <option value="auto">Auto (WebGPU → WASM)</option>
+          <option value="webgpu">WebGPU (fastest)</option>
+          <option value="wasm">WASM (compatible)</option>
+        </select></div>
+      </label>
+    </div>
+
+    <div class="check-row">
+      <label><input type="checkbox" id="s-bold"> Bold</label>
+      <label><input type="checkbox" id="s-italic"> Italic</label>
+      <label><input type="checkbox" id="s-outline"> Outline</label>
+      <label><input type="checkbox" id="s-shadow"> Shadow</label>
+      <label><input type="checkbox" id="s-showOriginal"> Show original text</label>
+    </div>
+  </section>
+
+  <script src="../shared/languages.js"></script>
+  <script src="../shared/text-utils.js"></script>
+  <script src="popup.js"></script>
+</body>
+</html>
